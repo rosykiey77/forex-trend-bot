@@ -37,10 +37,16 @@ risk:
   max_open_positions: 2
   max_consecutive_errors: 5
   stop_file: STOP
+  trailing_stop_r: 0.0   # e.g. 1.0 = trail SL one initial-SL-distance behind price; 0 = off
 
 strategy:
   name: ema_atr
   params: {fast: 20, slow: 50, atr_period: 14, atr_mult: 1.5, rr: 2.0}
+
+paper:
+  data_dir: data/live   # CSV folder polled for new closed bars ({SYMBOL}_{TF}.csv)
+  db: data/paper.db
+  poll_seconds: 10
 
 reports:
   dir: reports

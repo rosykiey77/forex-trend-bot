@@ -19,6 +19,12 @@ class PaperBroker(Broker):
         self._quote: dict[str, tuple[float, float, object]] = {}  # symbol -> (bid, ask, time)
         self._ids = itertools.count(1)  # deterministic ids for reproducible backtests
 
+    def restore(self, balance: float, positions: list[Position]) -> None:
+        """Load persisted state after a restart (src/storage/db.py)."""
+        self.balance = balance
+        self._positions = {p.id: p for p in positions}
+        self._ids = itertools.count(max((int(p.id) for p in positions), default=0) + 1)
+
     # --- prices -----------------------------------------------------------------
     def _spread(self, bar: Bar) -> float:
         spec = self.specs[bar.symbol]

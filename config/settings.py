@@ -21,6 +21,14 @@ class RiskCfg:
     max_open_positions: int = 2
     max_consecutive_errors: int = 5
     stop_file: str = "STOP"
+    trailing_stop_r: float = 0.0   # trail SL at N x initial SL distance; 0 = off
+
+
+@dataclass(frozen=True)
+class PaperCfg:
+    data_dir: str = "data/live"    # folder polled for {SYMBOL}_{TF}.csv
+    db: str = "data/paper.db"
+    poll_seconds: float = 10.0     # also the STOP-file reaction time (spec SC-005: <= 60 s)
 
 
 @dataclass(frozen=True)
@@ -37,6 +45,7 @@ class Settings:
     symbols: dict[str, SymbolSpec]
     timeframe: str = "M15"
     reports_dir: str = "reports"
+    paper: PaperCfg = field(default_factory=PaperCfg)
 
 
 def _build(cls, section: str, data: dict | None, **extra):
@@ -53,6 +62,8 @@ def load(path: str | Path = "config/config.yaml") -> Settings:
         raise ValueError("config [risk]: risk_per_trade_pct must be in (0, 5]")
     if not 0 < risk.daily_loss_limit_pct <= 100:
         raise ValueError("config [risk]: daily_loss_limit_pct must be in (0, 100]")
+    if risk.trailing_stop_r < 0:
+        raise ValueError("config [risk]: trailing_stop_r must be >= 0")
     if risk.max_open_positions < 1:
         raise ValueError("config [risk]: max_open_positions must be >= 1")
     account = _build(AccountCfg, "account", raw.get("account"))
@@ -71,4 +82,5 @@ def load(path: str | Path = "config/config.yaml") -> Settings:
         symbols=symbols,
         timeframe=raw.get("timeframe", "M15"),
         reports_dir=(raw.get("reports") or {}).get("dir", "reports"),
+        paper=_build(PaperCfg, "paper", raw.get("paper")),
     )

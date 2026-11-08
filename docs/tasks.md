@@ -98,7 +98,7 @@ Single project: `src/`, `tests/`, `config/`, `gateway/` di root repo.
 ### Tests for User Story 2
 
 - [ ] T030 [P] [US2] Write `tests/unit/test_swap_rollover.py`: position held across `00:00` server time charged swap once per rollover; Wednesday (weekday 2) ×3; no charge for positions opened after rollover
-- [ ] T031 [P] [US2] Write `tests/integration/test_paper_restart.py`: run paper replay N bars, stop with open position, new Engine on same DB → positions, balance, `day_start_equity`, `daily_locked` restored exactly (SC-006)
+- [X] T031 [P] [US2] Write `tests/integration/test_paper_restart.py`: run paper replay N bars, stop with open position, new Engine on same DB → positions, balance, `day_start_equity`, `daily_locked` restored exactly (SC-006)
 - [ ] T032 [P] [US2] Write `tests/unit/test_instance_lock.py`: second lock on `data/paper.lock` fails → exit code 4
 
 ### Implementation for User Story 2
@@ -128,7 +128,7 @@ Single project: `src/`, `tests/`, `config/`, `gateway/` di root repo.
 
 - [ ] T040 [P] [US3] Implement `KillSwitch` in `src/risk/kill_switch.py`: `check(now) -> str | None`, `record_error()`, `record_success()`, `set_disconnected(since)` — make T038 pass
 - [ ] T041 [US3] Extend `RiskManager` in `src/risk/risk_manager.py`: full `evaluate` order, `on_new_day` (reset `day_start_equity = equity`, `daily_locked = False`), daily-lock evaluation on every price update, `news_filter: Callable[[str, datetime], bool]` hook default `lambda *_: False` — make T037 pass
-- [ ] T042 [US3] Wire kill switch & daily lock into `src/engine.py` (step 1 and per-cycle error handling): on kill → close all positions (`exit_reason=KILL`), `log_event(kind="kill")`, exit 3; on daily lock → `log_event(kind="daily_lock")` once per day — make T039 pass
+- [X] T042 [US3] Wire kill switch & daily lock into `src/engine.py` (step 1 and per-cycle error handling): on kill → close all positions (`exit_reason=KILL`), `log_event(kind="kill")`, exit 3; on daily lock → `log_event(kind="daily_lock")` once per day — make T039 pass
 
 **Checkpoint**: quickstart V4 lulus.
 
@@ -142,13 +142,13 @@ Single project: `src/`, `tests/`, `config/`, `gateway/` di root repo.
 
 ### Tests for User Story 4
 
-- [ ] T043 [P] [US4] Write `tests/unit/test_telegram.py` with `httpx.MockTransport`: correct URL/payload; failure/timeout → no exception, `notify_failed` event logged; empty token → `NullNotifier`
+- [X] T043 [P] [US4] Write `tests/unit/test_telegram.py` with `httpx.MockTransport`: correct URL/payload; failure/timeout → no exception, `notify_failed` event logged; empty token → `NullNotifier`
 - [ ] T044 [P] [US4] Write `tests/unit/test_journal.py`: closed trade row contains every field of FR-025 (times, symbol, side, lots, entry/exit, SL, TP, commission, swap, slippage_cost, gross/net PnL, R, entry/exit reason, mode)
 
 ### Implementation for User Story 4
 
-- [ ] T045 [US4] Implement `TelegramNotifier` + `NullNotifier` in `src/notify/telegram.py` (queue + daemon thread, timeout 5 s, 2 retries, never raises) — make T043 pass
-- [ ] T046 [US4] Add message formatters (entry: symbol, side, lots, entry, SL, TP; exit: exit price, net PnL, R, exit reason) and call notifier from `src/engine.py` on open/close/daily_lock/kill/error
+- [X] T045 [US4] Implement `TelegramNotifier` + `NullNotifier` in `src/notify/telegram.py` (queue + daemon thread, timeout 5 s, 2 retries, never raises) — make T043 pass
+- [X] T046 [US4] Add message formatters (entry: symbol, side, lots, entry, SL, TP; exit: exit price, net PnL, R, exit reason) and call notifier from `src/engine.py` on open/close/daily_lock/kill/error
 - [ ] T047 [US4] Ensure `slippage_cost` is tracked in `PaperBroker` and written to `trades` in `src/broker/paper_broker.py` — make T044 pass
 
 **Checkpoint**: quickstart V5 lulus.
@@ -260,3 +260,13 @@ Layout follows the operator's request, which differs from the paths above:
 - Partially done: T001 (deps only PyYAML + pytest), T019 (merge order not unit-tested), T025 (no Storage persistence), T026 (also has daily lock + STOP/error kill switch from T040/T041), T028 (no equity.png; writes `summary.json` + `trades.csv`).
 - Daily loss day = UTC date (shortcut until `clock.py`, T012).
 - Not done yet: T002 (full skeleton), T008, T011 swap, T012, T013/T014 (SQLite), T016, T017 `gap_sl.csv` (gap covered by unit tests), T020/T023 (indicators live inline in `ema_atr.py`).
+
+## Implementation notes — Fase 3 & 4 (2026-11-08)
+
+Done: `src/storage/db.py` (T013/T014: SQLite meta/account/positions/trades/equity/events, one transaction per bar), `src/engine/paper_runner.py` (`PollingCsvFeed` + `PaperRunner(BacktestEngine)` reusing `step()`), `src/notify/telegram.py`, `forexbot --mode paper [--data DIR] [--db PATH]`, config `paper:` section + `risk.trailing_stop_r`. Tests: `tests/test_db.py`, `test_paper_runner.py`, `test_kill_switch.py`, `test_telegram.py`.
+
+- Restart: state restored from DB; bars ≤ last processed bar per symbol only warm the strategy up, the last one's signal is re-queued; bars that arrived while down are processed (SL/TP checked). Fresh start treats existing CSV bars as history. Verified: paper on fixture bars 2000–3000 = backtest trades 1:1.
+- Kill switch: STOP checked every poll and every bar → emergency close each position (one failure doesn't stop the rest), `kill` event, Telegram, exit 3. Repeated cycle errors → kill `errors`. SIGINT/SIGTERM → state saved, positions kept open, exit 0.
+- Telegram: stdlib `urllib` (no httpx), synchronous, 5 s timeout, never raises; Markdown 400 → resent as plain text; failures logged as `notify_failed` events; token masked in logs.
+- Partial: T035 (no `--reset-state`; delete the DB instead), T036 (no instance lock), T038/T040 (no disconnect trigger — needs the gateway, Phase 7; kill switch lives in `RiskManager`, no separate `kill_switch.py`), T034 (no replay pacing; live CSV polling instead).
+- Not done: T030/T033 swap rollover, T032 instance lock, T044/T047 journal test, MT5/REST gateway feed (Phase 7).

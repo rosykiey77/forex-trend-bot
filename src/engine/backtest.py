@@ -58,31 +58,44 @@ class BacktestEngine:
                 p = self.broker.open(decision)
                 log.info("open %s %s %.2f lots @%.5f sl=%.5f tp=%s | %s", p.symbol, p.side, p.lots,
                          p.entry_price, p.sl, p.tp, p.entry_reason)
+                self._on_open(p)
                 return
             except OrderRejected as e:
                 reason = str(e)
         log.info("reject %s %s: %s", sig.symbol, sig.side, reason)
         self.result.rejections.append((bar.time, sig.symbol, reason))
 
+    def _on_open(self, pos) -> None:
+        """Hook for subclasses (paper runner: persist + notify)."""
+
+    def kill(self, reason: str) -> None:
+        log.warning("kill switch: %s", reason)
+        self.result.kill_reason = reason
+        self._close_all("KILL")
+
+    def step(self, bar: Bar) -> bool:
+        """Process one closed bar. Returns False if the kill switch fired (positions closed)."""
+        if kill := self.risk.check_kill(bar.time):
+            self.kill(kill)
+            return False
+        self.broker.set_quote(bar)  # market price = this bar's open
+        if sig := self.pending.pop(bar.symbol, None):
+            self._execute(sig, bar)
+        self._record(self.broker.on_price(bar))
+        equity = self.broker.account().equity
+        self.risk.update(equity, bar.time)
+
+        hist = self.history.setdefault(bar.symbol, [])
+        hist.append(bar)
+        if sig := self.strategy.on_bar(bar.symbol, hist, self._position(bar.symbol)):
+            self.pending[bar.symbol] = sig
+        self.result.equity.append((bar.time, equity))
+        return True
+
     def run(self) -> BacktestResult:
         for bar in self.bars:
-            if kill := self.risk.check_kill(bar.time):
-                log.warning("kill switch: %s", kill)
-                self.result.kill_reason = kill
-                self._close_all("KILL")
+            if not self.step(bar):
                 return self.result
-            self.broker.set_quote(bar)  # market price = this bar's open
-            if sig := self.pending.pop(bar.symbol, None):
-                self._execute(sig, bar)
-            self._record(self.broker.on_price(bar))
-            equity = self.broker.account().equity
-            self.risk.update(equity, bar.time)
-
-            hist = self.history.setdefault(bar.symbol, [])
-            hist.append(bar)
-            if sig := self.strategy.on_bar(bar.symbol, hist, self._position(bar.symbol)):
-                self.pending[bar.symbol] = sig
-            self.result.equity.append((bar.time, equity))
         self._close_all("END_OF_DATA")
         if self.result.equity:
             self.result.equity.append((self.result.equity[-1][0], self.broker.account().equity))
