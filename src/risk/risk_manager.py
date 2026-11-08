@@ -43,11 +43,12 @@ class RiskManager:
             self.daily_locked = True
 
     # --- sizing -----------------------------------------------------------------
-    def lot_size(self, equity: float, sl_distance: float, spec: SymbolSpec) -> float:
-        """Lots risking risk_per_trade_pct of equity over sl_distance (price units). 0.0 = skip."""
-        if sl_distance <= 0 or equity <= 0:
+    def lot_size(self, equity: float, sl_distance: float, spec: SymbolSpec, risk_pct: float | None = None) -> float:
+        """Lots risking risk_pct (default/ceiling: risk_per_trade_pct) of equity over sl_distance. 0.0 = skip."""
+        pct = self.cfg.risk_per_trade_pct if risk_pct is None else min(risk_pct, self.cfg.risk_per_trade_pct)
+        if sl_distance <= 0 or equity <= 0 or pct <= 0:
             return 0.0
-        risk_money = equity * self.cfg.risk_per_trade_pct / 100
+        risk_money = equity * pct / 100
         loss_per_lot = sl_distance / spec.pip_size * spec.pip_value_per_lot
         steps = math.floor(round(risk_money / loss_per_lot / spec.volume_step, 9))  # round kills float noise
         lots = round(min(steps * spec.volume_step, spec.volume_max), 8)
@@ -71,7 +72,7 @@ class RiskManager:
             return Rejection("max open positions")
         if spread_points > spec.max_spread_points:
             return Rejection(f"spread {spread_points} > max {spec.max_spread_points}")
-        lots = self.lot_size(account.equity, abs(entry - signal.sl), spec)
+        lots = self.lot_size(account.equity, abs(entry - signal.sl), spec, signal.risk_pct)
         if lots <= 0:
             return Rejection("lot below volume_min")
         return Order(signal.symbol, signal.side, lots, signal.sl, signal.tp, signal.reason)

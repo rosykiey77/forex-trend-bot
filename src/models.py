@@ -58,6 +58,7 @@ class Signal:
     sl: float | None = None
     tp: float | None = None
     reason: str = ""
+    risk_pct: float | None = None   # per-signal risk override (rating sizing); capped by config risk_per_trade_pct
 
     def __post_init__(self):
         if self.side not in SIDES:

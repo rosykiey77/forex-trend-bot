@@ -115,3 +115,19 @@ def test_kill_switch_consecutive_errors(rm):
     assert rm.check_kill() is None
     rm.record_error()
     assert rm.check_kill() == "errors"
+
+
+# --- per-signal risk (rating sizing) --------------------------------------------
+def test_signal_risk_pct_halves_lots(rm, eurusd):
+    assert rm.lot_size(1000, 0.0020, eurusd, risk_pct=0.5) == 0.02  # 0.025 floored
+    assert rm.lot_size(1000, 0.0020, eurusd, risk_pct=0.0) == 0.0
+
+
+def test_signal_risk_pct_capped_by_config(rm, eurusd):
+    assert rm.lot_size(1000, 0.0020, eurusd, risk_pct=3.0) == rm.lot_size(1000, 0.0020, eurusd)
+
+
+def test_evaluate_uses_signal_risk_pct(rm, eurusd):
+    o = ev(rm, eurusd, Signal("EURUSD", "BUY", sl=1.098, reason="x", risk_pct=0.5))
+    full = ev(rm, eurusd, Signal("EURUSD", "BUY", sl=1.098, reason="x"))
+    assert isinstance(o, Order) and o.lots < full.lots
