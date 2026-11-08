@@ -37,9 +37,11 @@ class PollingCsvFeed:
 
 
 class PaperRunner(BacktestEngine):
-    def __init__(self, cfg, feed: PollingCsvFeed, storage: Storage, notifier, poll_seconds: float = 10.0):
+    mode = "paper"
+
+    def __init__(self, cfg, feed: PollingCsvFeed, storage: Storage, notifier, poll_seconds: float = 10.0, broker=None):
         super().__init__([], STRATEGIES[cfg.strategy.name](cfg.strategy.params),
-                         PaperBroker(cfg.symbols, cfg.account.initial_balance, cfg.account.leverage),
+                         broker or PaperBroker(cfg.symbols, cfg.account.initial_balance, cfg.account.leverage),
                          RiskManager(cfg.risk))
         self.feed, self.storage, self.notifier, self.poll_seconds = feed, storage, notifier, poll_seconds
         self.trailing_r = cfg.risk.trailing_stop_r
@@ -129,7 +131,7 @@ class PaperRunner(BacktestEngine):
         self._persist()
         acc = self.broker.account()
         self.storage.log_event("start", f"balance {acc.balance:.2f}, {len(self.broker.positions())} open positions")
-        self.notifier.startup("paper", acc.balance, len(self.broker.positions()))
+        self.notifier.startup(self.mode, acc.balance, len(self.broker.positions()))
 
     def cycle(self) -> bool:
         """One poll. False = kill switch fired."""

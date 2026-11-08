@@ -48,5 +48,15 @@ paper:
   db: data/paper.db
   poll_seconds: 10
 
+live:
+  live_enabled: false   # live needs this true AND the --confirm-live flag; test on a DEMO account first
+  gateway_url: http://127.0.0.1:8765   # gateway/mt5_gateway.py (SSH tunnel to the Windows VPS); token: env MT5_GATEWAY_TOKEN
+  magic: 20261108
+  deviation_points: 20
+  timeout_seconds: 10
+  history_bars: 500
+  db: data/live.db
+  poll_seconds: 10
+
 reports:
   dir: reports

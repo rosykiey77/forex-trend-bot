@@ -32,6 +32,18 @@ class PaperCfg:
 
 
 @dataclass(frozen=True)
+class LiveCfg:
+    live_enabled: bool = False     # 2nd guard next to the --confirm-live CLI flag
+    gateway_url: str = "http://127.0.0.1:8765"   # token: env MT5_GATEWAY_TOKEN
+    magic: int = 20261108          # only positions with this magic number are touched
+    deviation_points: int = 20
+    timeout_seconds: float = 10.0
+    history_bars: int = 500        # bars fetched per poll (warm-up + catch-up window)
+    db: str = "data/live.db"
+    poll_seconds: float = 10.0
+
+
+@dataclass(frozen=True)
 class StrategyCfg:
     name: str = "ema_atr"
     params: dict = field(default_factory=dict)
@@ -46,6 +58,7 @@ class Settings:
     timeframe: str = "M15"
     reports_dir: str = "reports"
     paper: PaperCfg = field(default_factory=PaperCfg)
+    live: LiveCfg = field(default_factory=LiveCfg)
 
 
 def _build(cls, section: str, data: dict | None, **extra):
@@ -83,4 +96,5 @@ def load(path: str | Path = "config/config.yaml") -> Settings:
         timeframe=raw.get("timeframe", "M15"),
         reports_dir=(raw.get("reports") or {}).get("dir", "reports"),
         paper=_build(PaperCfg, "paper", raw.get("paper")),
+        live=_build(LiveCfg, "live", raw.get("live")),
     )

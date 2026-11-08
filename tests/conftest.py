@@ -97,3 +97,27 @@ def paper(cfg, tmp_path):
     yield make
     for s in opened:
         s.close()
+
+
+# --- MT5 gateway helpers (test_mt5_gateway, test_mt5_broker, test_mt5_feed) -------------------
+import threading  # noqa: E402
+from types import SimpleNamespace  # noqa: E402
+
+from gateway.mt5_gateway import Gateway, make_server  # noqa: E402
+from src.broker.mt5_broker import GatewayClient  # noqa: E402
+from tests.fake_mt5 import FakeMT5  # noqa: E402
+
+GW_TOKEN = "test-token"
+
+
+@pytest.fixture
+def gw():
+    """Gateway on a random localhost port over a FakeMT5. Yields (client, fake, url)."""
+    fake = FakeMT5()
+    gateway = Gateway(fake, GW_TOKEN)
+    srv = make_server(gateway, "127.0.0.1", 0)
+    threading.Thread(target=srv.serve_forever, args=(0.05,), daemon=True).start()
+    url = f"http://127.0.0.1:{srv.server_address[1]}"
+    yield SimpleNamespace(client=GatewayClient(url, GW_TOKEN, timeout=5), fake=fake, url=url, gateway=gateway)
+    srv.shutdown()
+    srv.server_close()

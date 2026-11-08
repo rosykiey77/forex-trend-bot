@@ -12,7 +12,7 @@ Rujukan: [CLI](contracts/cli.md), [Gateway](contracts/gateway.md), [Data model](
 ```bash
 python3.11 -m venv .venv && . .venv/bin/activate
 pip install -e ".[dev]"            # ".[zmq]" bila transport ZeroMQ
-cp .env.example .env               # isi TELEGRAM_*, GATEWAY_TOKEN bila dipakai
+cp .env.example .env               # isi TELEGRAM_*, MT5_GATEWAY_TOKEN bila dipakai
 cp config/config.example.yaml config/config.yaml
 ```
 
@@ -53,12 +53,12 @@ Isi `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`; jalankan V3 → pesan entry/exit m
 
 Windows:
 ```bat
-set GATEWAY_TOKEN=...  &&  python gateway\mt5_gateway.py --host 127.0.0.1 --port 8765
+pip install MetaTrader5
+set MT5_GATEWAY_TOKEN=...  &&  python gateway\mt5_gateway.py --host 127.0.0.1 --port 8765
 ```
 Linux (tunnel): `ssh -N -L 8765:127.0.0.1:8765 user@winvps`, lalu:
 ```bash
-curl -s -X POST -H "X-Gateway-Token: $GATEWAY_TOKEN" localhost:8765/health
-forexbot-download --symbol EURUSD --timeframe M15 --from 2025-01-01 --to 2025-06-30 --out data/
+curl -s -H "Authorization: Bearer $MT5_GATEWAY_TOKEN" localhost:8765/health
 forexbot --mode live                     # expected: exit 2 (tanpa flag)
 forexbot --mode live --confirm-live      # live_enabled:true, akun DEMO → tampil info akun, ketik yes
 ```

@@ -163,19 +163,19 @@ Single project: `src/`, `tests/`, `config/`, `gateway/` di root repo.
 
 ### Tests for User Story 5
 
-- [ ] T048 [P] [US5] Create `tests/fakes/fake_mt5.py`: in-memory stand-in for the `MetaTrader5` functions used by the gateway (`initialize`, `account_info`, `symbol_info`, `symbol_info_tick`, `copy_rates_range`, `copy_rates_from_pos`, `positions_get`, `order_send`, `history_deals_get`, constants)
-- [ ] T049 [P] [US5] Write `tests/integration/test_gateway.py`: start gateway with fake MT5 on localhost random port; every command in contracts/gateway.md returns `{"ok": true, "data": ...}` shape; wrong token → 401; `order_send` without SL → `ORDER_REJECTED`; `position_close` on foreign magic → `ORDER_REJECTED`; same tests over ZMQ transport skipped if `pyzmq` missing
-- [ ] T050 [P] [US5] Write `tests/unit/test_live_guards.py`: live without `--confirm-live` → exit 2; without `live_enabled: true` → exit 2; confirmation input other than exact `yes` → exit 2; account banner shows login, server, demo/real, balance
+- [X] T048 [P] [US5] Create `tests/fakes/fake_mt5.py`: in-memory stand-in for the `MetaTrader5` functions used by the gateway (`initialize`, `account_info`, `symbol_info`, `symbol_info_tick`, `copy_rates_range`, `copy_rates_from_pos`, `positions_get`, `order_send`, `history_deals_get`, constants)
+- [X] T049 [P] [US5] Write `tests/integration/test_gateway.py`: start gateway with fake MT5 on localhost random port; every command in contracts/gateway.md returns `{"ok": true, "data": ...}` shape; wrong token → 401; `order_send` without SL → `ORDER_REJECTED`; `position_close` on foreign magic → `ORDER_REJECTED`; same tests over ZMQ transport skipped if `pyzmq` missing
+- [X] T050 [P] [US5] Write `tests/unit/test_live_guards.py`: live without `--confirm-live` → exit 2; without `live_enabled: true` → exit 2; confirmation input other than exact `yes` → exit 2; account banner shows login, server, demo/real, balance
 
 ### Implementation for User Story 5
 
-- [ ] T051 [US5] Implement `gateway/mt5_gateway.py` (runs on Windows; `import MetaTrader5 as mt5` with `--fake` option importing `tests/fakes/fake_mt5.py`): `ThreadingHTTPServer` POST `/{command}`, `X-Gateway-Token` from env `GATEWAY_TOKEN`, single `threading.Lock` around MT5 calls, commands & error codes per contracts/gateway.md, filling mode FOK→IOC→RETURN, `--transport zmq` REP loop with identical messages, default bind `127.0.0.1` — make T049 pass
+- [X] T051 [US5] Implement `gateway/mt5_gateway.py` (runs on Windows; `import MetaTrader5 as mt5` with `--fake` option importing `tests/fakes/fake_mt5.py`): `ThreadingHTTPServer` POST `/{command}`, `X-Gateway-Token` from env `GATEWAY_TOKEN`, single `threading.Lock` around MT5 calls, commands & error codes per contracts/gateway.md, filling mode FOK→IOC→RETURN, `--transport zmq` REP loop with identical messages, default bind `127.0.0.1` — make T049 pass
 - [ ] T052 [P] [US5] Write `gateway/README.md`: Windows install (Python 3.11, `pip install MetaTrader5 pyzmq`), run as service (NSSM/Task Scheduler), SSH tunnel / WireGuard example, Wine notes
-- [ ] T053 [US5] Implement `GatewayClient` in `src/broker/gateway_client.py`: `call(command, **params)`; REST via `httpx.Client` and ZMQ via `pyzmq` (lazy import), timeout `gateway.timeout_seconds`, raise `GatewayError(code, message)`, report transport failures to `KillSwitch.set_disconnected`
-- [ ] T054 [P] [US5] Implement `GatewayFeed` in `src/data/gateway_feed.py`: `symbol_spec()` from `symbol_info` overriding config values, `history()` via `bars`, `next_event()` polls `tick` every `poll_seconds` and emits new closed bars
-- [ ] T055 [US5] Implement `GatewayBroker` in `src/broker/gateway_broker.py`: maps Broker ABC to `order_send/order_modify/position_close/positions/account` with `magic_number` & `deviation_points`; `on_price` syncs positions and detects server-side SL/TP closes via `history_deals` → `Trade` written to journal
+- [X] T053 [US5] Implement `GatewayClient` in `src/broker/gateway_client.py`: `call(command, **params)`; REST via `httpx.Client` and ZMQ via `pyzmq` (lazy import), timeout `gateway.timeout_seconds`, raise `GatewayError(code, message)`, report transport failures to `KillSwitch.set_disconnected`
+- [X] T054 [P] [US5] Implement `GatewayFeed` in `src/data/gateway_feed.py`: `symbol_spec()` from `symbol_info` overriding config values, `history()` via `bars`, `next_event()` polls `tick` every `poll_seconds` and emits new closed bars
+- [X] T055 [US5] Implement `GatewayBroker` in `src/broker/gateway_broker.py`: maps Broker ABC to `order_send/order_modify/position_close/positions/account` with `magic_number` & `deviation_points`; `on_price` syncs positions and detects server-side SL/TP closes via `history_deals` → `Trade` written to journal
 - [ ] T056 [US5] Implement `src/data/download.py` `forexbot-download` (paged `bars` requests → CSV `time,open,high,low,close,volume,spread`, validated by CsvFeed rules)
-- [ ] T057 [US5] Add `--mode live` and `--mode paper --feed gateway` wiring to `src/main.py`: guards (flag + `live_enabled`), account banner + exact `yes` prompt, `GatewayFeed` + `GatewayBroker`/`PaperBroker` — make T050 pass
+- [X] T057 [US5] Add `--mode live` and `--mode paper --feed gateway` wiring to `src/main.py`: guards (flag + `live_enabled`), account banner + exact `yes` prompt, `GatewayFeed` + `GatewayBroker`/`PaperBroker` — make T050 pass
 
 **Checkpoint**: T049/T050 hijau di Linux; quickstart V6 dijalankan manual di akun demo.
 
@@ -270,3 +270,15 @@ Done: `src/storage/db.py` (T013/T014: SQLite meta/account/positions/trades/equit
 - Telegram: stdlib `urllib` (no httpx), synchronous, 5 s timeout, never raises; Markdown 400 → resent as plain text; failures logged as `notify_failed` events; token masked in logs.
 - Partial: T035 (no `--reset-state`; delete the DB instead), T036 (no instance lock), T038/T040 (no disconnect trigger — needs the gateway, Phase 7; kill switch lives in `RiskManager`, no separate `kill_switch.py`), T034 (no replay pacing; live CSV polling instead).
 - Not done: T030/T033 swap rollover, T032 instance lock, T044/T047 journal test, MT5/REST gateway feed (Phase 7).
+
+## Implementation notes — Fase 5 (2026-11-08)
+
+Built per the operator's request (REST GET/POST endpoints + Bearer auth), which replaces the `POST /{command}` + `X-Gateway-Token` design in T051; `docs/contracts/gateway.md` updated to match.
+
+- `gateway/mt5_gateway.py`: stdlib `ThreadingHTTPServer`, `Authorization: Bearer $MT5_GATEWAY_TOKEN` (constant-time compare), one lock around MT5 calls, `/health /candles /tick /symbol_info /positions /deals` + `POST /order /modify /close`; no-SL orders and foreign-magic modify/close refused; filling FOK→IOC→RETURN from `filling_mode`. Without `MetaTrader5` it still serves, answering `NOT_CONNECTED`. No `--fake` flag: tests inject `tests/fake_mt5.py` directly.
+- `src/broker/mt5_broker.py` (T053+T055 in one file): `GatewayClient` (urllib, not httpx), `GatewayError(OrderRejected)`, `Mt5Broker`. Positions closed server-side are detected in `on_price()` and journaled from `/deals` (exit price, reason SL/TP, commission, swap). R basis + reason kept across SL trailing and restarts.
+- `src/data/mt5_feed.py` (T054 as `Mt5Feed`): `poll(after)` over `/candles start=1` (closed bars only), `specs()` overrides contract data from `/symbol_info`.
+- `src/engine/live_runner.py`: `LiveRunner(PaperRunner)` — same persistence/alerts/kill switch/trailing; executes the signal right after the bar closes at the live tick (= backtest next-bar-open); warm-up signals never trade.
+- `forexbot --mode live --confirm-live` (T057): exit 2 unless `live.live_enabled: true` AND the flag; exit 1 with gateway start instructions if unreachable; account banner (login, name, broker, server, DEMO / REAL MONEY, balance, equity, magic) then exact `yes` prompt (EOF → exit 2). DB `data/live.db`.
+- Tests: `tests/test_mt5_gateway.py`, `test_mt5_broker.py` (broker + live guards + LiveRunner end-to-end), `test_mt5_feed.py`, all against a real gateway on a random port over `FakeMT5`.
+- Not done: T052 gateway README, T056 downloader, ZMQ transport, `--mode paper --feed gateway`, disconnect-specific kill trigger (transport failures count as cycle errors instead), MT5 server-time → UTC conversion.
