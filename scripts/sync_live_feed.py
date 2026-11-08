@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Sync live M15 market data from Yahoo Finance for EURUSD and XAUUSD to CSV."""
+"""Sync live H1 & M15 market data from Yahoo Finance for EURUSD and XAUUSD to CSV."""
 import csv
 import json
 import logging
@@ -14,18 +14,23 @@ OUT_DIR = Path("/home/ubuntu/forex-trend-bot/data/live")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 TICKERS = {
-    "EURUSD": ("EURUSD=X", 10, 5),   # default spread 10 points (1.0 pip), 5 digits
-    "XAUUSD": ("GC=F", 25, 2),       # default spread 25 points, 2 digits
+    "EURUSD": ("EURUSD=X", 10, 5),   # spread 10 points (1 pip), 5 digits
+    "XAUUSD": ("GC=F", 25, 2),       # spread 25 points, 2 digits
 }
 
-def fetch_ohlcv(ticker: str, spread_points: int, digits: int) -> list[dict]:
-    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker}?interval=15m&range=5d"
+TIMEFRAMES = [
+    ("H1", "1h", "730d"),
+    ("M15", "15m", "5d"),
+]
+
+def fetch_ohlcv(ticker: str, interval: str, timerange: str, spread_points: int, digits: int) -> list[dict]:
+    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker}?interval={interval}&range={timerange}"
     req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
     try:
         with urllib.request.urlopen(req, timeout=15) as resp:
             data = json.loads(resp.read().decode())
     except Exception as e:
-        log.error("Failed to fetch %s: %s", ticker, e)
+        log.error("Failed to fetch %s (%s): %s", ticker, interval, e)
         return []
 
     try:
@@ -38,7 +43,7 @@ def fetch_ohlcv(ticker: str, spread_points: int, digits: int) -> list[dict]:
         closes = quotes.get("close", [])
         volumes = quotes.get("volume", [])
     except Exception as e:
-        log.error("Malformed payload for %s: %s", ticker, e)
+        log.error("Malformed payload for %s (%s): %s", ticker, interval, e)
         return []
 
     rows = []
@@ -62,8 +67,8 @@ def fetch_ohlcv(ticker: str, spread_points: int, digits: int) -> list[dict]:
         })
     return rows
 
-def sync_symbol(symbol: str, ticker: str, spread: int, digits: int) -> int:
-    csv_path = OUT_DIR / f"{symbol}_M15.csv"
+def sync_symbol_tf(symbol: str, ticker: str, tf_label: str, interval: str, timerange: str, spread: int, digits: int) -> int:
+    csv_path = OUT_DIR / f"{symbol}_{tf_label}.csv"
     existing_rows: dict[str, dict] = {}
     if csv_path.exists():
         try:
@@ -73,9 +78,9 @@ def sync_symbol(symbol: str, ticker: str, spread: int, digits: int) -> int:
                     if r.get("time"):
                         existing_rows[r["time"]] = r
         except Exception as e:
-            log.warning("Could not read existing %s: %s", csv_path, e)
+            log.warning("Could not read %s: %s", csv_path, e)
 
-    fresh = fetch_ohlcv(ticker, spread, digits)
+    fresh = fetch_ohlcv(ticker, interval, timerange, spread, digits)
     if not fresh:
         return 0
 
@@ -85,7 +90,6 @@ def sync_symbol(symbol: str, ticker: str, spread: int, digits: int) -> int:
             added += 1
         existing_rows[r["time"]] = r
 
-    # Sort chronologically
     sorted_rows = sorted(existing_rows.values(), key=lambda x: x["time"])
 
     with open(csv_path, "w", newline="", encoding="utf-8") as f:
@@ -93,12 +97,13 @@ def sync_symbol(symbol: str, ticker: str, spread: int, digits: int) -> int:
         writer.writeheader()
         writer.writerows(sorted_rows)
 
-    log.info("%s: total %d bars (added %d new)", symbol, len(sorted_rows), added)
+    log.info("%s_%s: total %d bars (+%d new)", symbol, tf_label, len(sorted_rows), added)
     return added
 
 def main():
     for sym, (ticker, spread, digits) in TICKERS.items():
-        sync_symbol(sym, ticker, spread, digits)
+        for tf_label, interval, timerange in TIMEFRAMES:
+            sync_symbol_tf(sym, ticker, tf_label, interval, timerange, spread, digits)
 
 if __name__ == "__main__":
     main()

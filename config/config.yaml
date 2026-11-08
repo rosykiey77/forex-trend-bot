@@ -3,7 +3,7 @@ account:
   initial_balance: 1000
   leverage: 100
 
-timeframe: M15
+timeframe: H1
 
 symbols:
   EURUSD:
@@ -40,12 +40,9 @@ risk:
   trailing_stop_r: 0.0   # e.g. 1.0 = trail SL one initial-SL-distance behind price; 0 = off
 
 strategy:
-  name: ema_atr
-  params: {fast: 20, slow: 50, atr_period: 14, atr_mult: 1.5, rr: 2.0}
-  # TradingAgents-style daily bias + H1 pullback (docs/tradingagents-strategy.md); needs timeframe: H1.
-  # name: pullback_h1
-  # params: {ema_fast: 20, ema_slow: 50, atr_period: 14, sl_atr: 1.5, max_sl_atr: 2.5, swing_bars: 10,
-  #          rr: 2.0, time_stop_bars: 120, news_blackout_minutes: 30, llm_bias_enabled: false}
+  name: pullback_h1
+  params: {ema_fast: 20, ema_slow: 50, atr_period: 14, sl_atr: 1.5, max_sl_atr: 2.5, swing_bars: 10,
+           rr: 2.0, time_stop_bars: 120, news_blackout_minutes: 30, llm_bias_enabled: false}
 
 paper:
   data_dir: data/live   # CSV folder polled for new closed bars ({SYMBOL}_{TF}.csv)
