@@ -10,3 +10,6 @@ reports/*.html
 data/csv/
 .claude/
 STOP
+.venv/
+reports/
+data/*.db*

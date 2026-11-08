@@ -1,0 +1,46 @@
+account:
+  currency: USD
+  initial_balance: 1000
+  leverage: 100
+
+timeframe: M15
+
+symbols:
+  EURUSD:
+    pip_size: 0.0001
+    point: 0.00001
+    digits: 5
+    contract_size: 100000
+    volume_min: 0.01
+    volume_max: 100
+    volume_step: 0.01
+    default_spread_points: 10
+    max_spread_points: 30
+    slippage_points: 2
+    commission_per_lot: 7.0
+  XAUUSD:
+    pip_size: 0.1
+    point: 0.01
+    digits: 2
+    contract_size: 100
+    volume_min: 0.01
+    volume_max: 50
+    volume_step: 0.01
+    default_spread_points: 25
+    max_spread_points: 60
+    slippage_points: 5
+    commission_per_lot: 7.0
+
+risk:
+  risk_per_trade_pct: 1.0
+  daily_loss_limit_pct: 3.0
+  max_open_positions: 2
+  max_consecutive_errors: 5
+  stop_file: STOP
+
+strategy:
+  name: ema_atr
+  params: {fast: 20, slow: 50, atr_period: 14, atr_mult: 1.5, rr: 2.0}
+
+reports:
+  dir: reports

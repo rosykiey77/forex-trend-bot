@@ -27,10 +27,10 @@ Single project: `src/`, `tests/`, `config/`, `gateway/` di root repo.
 
 **Purpose**: Inisialisasi proyek
 
-- [ ] T001 Create `pyproject.toml` (name `forex-trend-bot`, `requires-python = ">=3.11"`, deps: pydantic>=2, PyYAML, python-dotenv, pandas, numpy, httpx, matplotlib; extras `dev = [pytest]`, `zmq = [pyzmq]`; scripts `forexbot = "src.main:main"`, `forexbot-download = "src.data.download:main"`, `forexbot-report = "src.report:main"`; pytest `testpaths = ["tests"]`)
+- [X] T001 Create `pyproject.toml` (name `forex-trend-bot`, `requires-python = ">=3.11"`, deps: pydantic>=2, PyYAML, python-dotenv, pandas, numpy, httpx, matplotlib; extras `dev = [pytest]`, `zmq = [pyzmq]`; scripts `forexbot = "src.main:main"`, `forexbot-download = "src.data.download:main"`, `forexbot-report = "src.report:main"`; pytest `testpaths = ["tests"]`)
 - [ ] T002 [P] Create package skeleton with empty `__init__.py` in `src/`, `src/core/`, `src/data/`, `src/strategy/`, `src/broker/`, `src/risk/`, `src/storage/`, `src/notify/`, and dirs `tests/unit/`, `tests/integration/`, `tests/fixtures/`, `tests/fakes/`, `gateway/`
-- [ ] T003 [P] Create `.gitignore` (`.venv/`, `.env`, `data/*.db*`, `data/*.lock`, `reports/`, `STOP`, `__pycache__/`) and `.env.example` (`GATEWAY_TOKEN=`, `TELEGRAM_BOT_TOKEN=`, `TELEGRAM_CHAT_ID=`)
-- [ ] T004 [P] Create `config/config.example.yaml` with all keys: `account{currency: USD, initial_balance: 1000}`, `timeframe: M15`, `symbols{EURUSD{pip_size: 0.0001, point: 0.00001, digits: 5, contract_size: 100000, volume_min: 0.01, volume_max: 100, volume_step: 0.01, default_spread_points: 10, max_spread_points: 30, slippage_points: 2, commission_per_lot: 7.0, swap_long_points: -7.0, swap_short_points: 2.0, triple_swap_weekday: 2, sessions: ["00:05-23:55"]}, XAUUSD{pip_size: 0.1, point: 0.01, digits: 2, contract_size: 100, volume_min: 0.01, volume_max: 50, volume_step: 0.01, default_spread_points: 25, max_spread_points: 60, slippage_points: 5, commission_per_lot: 7.0, swap_long_points: -50.0, swap_short_points: 20.0, triple_swap_weekday: 2, sessions: ["01:05-23:55"]}}`, `risk{risk_per_trade_pct: 1.0, daily_loss_limit_pct: 3.0, max_open_positions: 2, max_consecutive_errors: 5, max_disconnect_seconds: 120, stop_file: STOP}`, `strategy{name: ema_atr, params{fast: 20, slow: 50, atr_period: 14, atr_mult: 1.5, rr: 2.0}}`, `broker_time{server_tz: "Etc/GMT-2", rollover: "00:00"}`, `engine{poll_seconds: 5, replay_speed: 0}`, `gateway{url: null, transport: rest, timeout_seconds: 10}`, `live{live_enabled: false, magic_number: 20261108, deviation_points: 20}`, `storage{dir: data}`, `reports{dir: reports}`
+- [X] T003 [P] Create `.gitignore` (`.venv/`, `.env`, `data/*.db*`, `data/*.lock`, `reports/`, `STOP`, `__pycache__/`) and `.env.example` (`GATEWAY_TOKEN=`, `TELEGRAM_BOT_TOKEN=`, `TELEGRAM_CHAT_ID=`)
+- [X] T004 [P] Create `config/config.example.yaml` with all keys: `account{currency: USD, initial_balance: 1000}`, `timeframe: M15`, `symbols{EURUSD{pip_size: 0.0001, point: 0.00001, digits: 5, contract_size: 100000, volume_min: 0.01, volume_max: 100, volume_step: 0.01, default_spread_points: 10, max_spread_points: 30, slippage_points: 2, commission_per_lot: 7.0, swap_long_points: -7.0, swap_short_points: 2.0, triple_swap_weekday: 2, sessions: ["00:05-23:55"]}, XAUUSD{pip_size: 0.1, point: 0.01, digits: 2, contract_size: 100, volume_min: 0.01, volume_max: 50, volume_step: 0.01, default_spread_points: 25, max_spread_points: 60, slippage_points: 5, commission_per_lot: 7.0, swap_long_points: -50.0, swap_short_points: 20.0, triple_swap_weekday: 2, sessions: ["01:05-23:55"]}}`, `risk{risk_per_trade_pct: 1.0, daily_loss_limit_pct: 3.0, max_open_positions: 2, max_consecutive_errors: 5, max_disconnect_seconds: 120, stop_file: STOP}`, `strategy{name: ema_atr, params{fast: 20, slow: 50, atr_period: 14, atr_mult: 1.5, rr: 2.0}}`, `broker_time{server_tz: "Etc/GMT-2", rollover: "00:00"}`, `engine{poll_seconds: 5, replay_speed: 0}`, `gateway{url: null, transport: rest, timeout_seconds: 10}`, `live{live_enabled: false, magic_number: 20261108, deviation_points: 20}`, `storage{dir: data}`, `reports{dir: reports}`
 
 ---
 
@@ -40,20 +40,20 @@ Single project: `src/`, `tests/`, `config/`, `gateway/` di root repo.
 
 ### Tests first (harus GAGAL dulu)
 
-- [ ] T005 [P] Write `tests/unit/test_pricing.py`: pip value per lot EURUSD = 10.0 USD (0.0001×100000), XAUUSD = 10.0 USD (0.1×100); gross PnL BUY EURUSD 1.0 lot 1.10000→1.10200 = +200.00; SELL XAUUSD 0.10 lot 2000.00→1990.00 = +100.00; swap EURUSD long 1 lot −7 points = −7.00 USD/malam, ×3 pada `triple_swap_weekday`; konversi non-USD quote memakai `conv_rate`
-- [ ] T006 [P] Write `tests/unit/test_sizing.py`: equity 1000, risk 1%, EURUSD SL 20 pips → 0.05 lot; XAUUSD SL 15.0 USD (150 pips) → 0.0066→ **0.00 → skip** (di bawah `volume_min` 0.01, return 0.0, tidak dibulatkan ke atas); hasil selalu kelipatan `volume_step` dibulatkan ke BAWAH; clamp ke `volume_max`; `sl_distance` 0 → 0.0
-- [ ] T007 [P] Write `tests/unit/test_config.py`: example config valid; `risk_per_trade_pct` ≤ 0 atau > 5 ditolak; simbol tanpa `pip_size` ditolak; rahasia hanya dari env (`GATEWAY_TOKEN`, `TELEGRAM_*`)
+- [X] T005 [P] Write `tests/unit/test_pricing.py`: pip value per lot EURUSD = 10.0 USD (0.0001×100000), XAUUSD = 10.0 USD (0.1×100); gross PnL BUY EURUSD 1.0 lot 1.10000→1.10200 = +200.00; SELL XAUUSD 0.10 lot 2000.00→1990.00 = +100.00; swap EURUSD long 1 lot −7 points = −7.00 USD/malam, ×3 pada `triple_swap_weekday`; konversi non-USD quote memakai `conv_rate`
+- [X] T006 [P] Write `tests/unit/test_sizing.py`: equity 1000, risk 1%, EURUSD SL 20 pips → 0.05 lot; XAUUSD SL 15.0 USD (150 pips) → 0.0066→ **0.00 → skip** (di bawah `volume_min` 0.01, return 0.0, tidak dibulatkan ke atas); hasil selalu kelipatan `volume_step` dibulatkan ke BAWAH; clamp ke `volume_max`; `sl_distance` 0 → 0.0
+- [X] T007 [P] Write `tests/unit/test_config.py`: example config valid; `risk_per_trade_pct` ≤ 0 atau > 5 ditolak; simbol tanpa `pip_size` ditolak; rahasia hanya dari env (`GATEWAY_TOKEN`, `TELEGRAM_*`)
 - [ ] T008 [P] Write `tests/unit/test_clock.py`: UTC→server tz `Etc/GMT-2`; deteksi rollover saat melewati `00:00` server; `in_session()` false di Sabtu/Minggu dan di luar `sessions`
 
 ### Implementation
 
-- [ ] T009 [P] Implement dataclasses in `src/core/models.py` per data-model.md: `Bar`, `Tick`, `SymbolSpec`, `Signal` (`side` ∈ `BUY|SELL|CLOSE`; `sl` wajib untuk BUY/SELL; BUY: sl < entry; SELL: sl > entry; `reason` non-empty), `OrderRequest`, `Position`, `Trade` (`exit_reason` ∈ `TP|SL|SIGNAL|KILL|MANUAL|END_OF_DATA`), `AccountState`, `Rejection(reason)`
-- [ ] T010 Implement `src/config.py`: pydantic v2 models mirroring T004 keys, `load(path) -> AppConfig` (YAML + `dotenv` for secrets), `symbol_spec(name) -> SymbolSpec` — make T007 pass
+- [X] T009 [P] Implement dataclasses in `src/core/models.py` per data-model.md: `Bar`, `Tick`, `SymbolSpec`, `Signal` (`side` ∈ `BUY|SELL|CLOSE`; `sl` wajib untuk BUY/SELL; BUY: sl < entry; SELL: sl > entry; `reason` non-empty), `OrderRequest`, `Position`, `Trade` (`exit_reason` ∈ `TP|SL|SIGNAL|KILL|MANUAL|END_OF_DATA`), `AccountState`, `Rejection(reason)`
+- [X] T010 Implement `src/config.py`: pydantic v2 models mirroring T004 keys, `load(path) -> AppConfig` (YAML + `dotenv` for secrets), `symbol_spec(name) -> SymbolSpec` — make T007 pass
 - [ ] T011 Implement pure functions in `src/core/pricing.py`: `pip_value_per_lot(spec, conv_rate=1.0)`, `gross_pnl(side, entry, exit, lots, spec, conv_rate)`, `swap_charge(side, lots, spec, weekday, conv_rate)`, `lot_size(equity, risk_pct, sl_distance_price, spec, conv_rate)` per research R6 (floor to `volume_step`, clamp `volume_max`, <`volume_min` → 0.0) — make T005, T006 pass
 - [ ] T012 [P] Implement `src/core/clock.py`: `to_server(dt)`, `trading_day(dt)`, `crossed_rollover(prev, now)`, `in_session(dt, sessions)` (Mon–Fri only) — make T008 pass
 - [ ] T013 Write `src/storage/schema.sql` exactly as data-model.md tables (`meta`, `account` with `CHECK(id=1)`, `positions`, `trades`, `equity`, `events`) and implement `src/storage/db.py` `Storage(path)`: WAL, `executescript(schema)`, `load_state()`, `save_account()`, `upsert_position()`, `close_position(trade)` (DELETE position + INSERT trade + UPDATE account in ONE transaction), `append_equity()`, `log_event(level, kind, msg)`, `trades(run_id)`
 - [ ] T014 [P] Write `tests/unit/test_storage.py`: round-trip account/positions; `close_position` atomic (simulated exception → no partial write); reopen file → state identical
-- [ ] T015 [P] Define ABCs per contracts/interfaces.md: `Strategy` in `src/strategy/base.py`, `Feed` in `src/data/base.py`, `Broker` + `OrderRejected` in `src/broker/base.py`
+- [X] T015 [P] Define ABCs per contracts/interfaces.md: `Strategy` in `src/strategy/base.py`, `Feed` in `src/data/base.py`, `Broker` + `OrderRejected` in `src/broker/base.py`
 - [ ] T016 [P] Implement logging setup (`time level kind message` to stdout, `--log-level`) in `src/logging_setup.py`
 
 **Checkpoint**: `pytest tests/unit` hijau untuk pricing/sizing/config/clock/storage.
@@ -69,21 +69,21 @@ Single project: `src/`, `tests/`, `config/`, `gateway/` di root repo.
 ### Tests for User Story 1 (tulis dulu, harus GAGAL)
 
 - [ ] T017 [P] [US1] Create deterministic fixtures `tests/fixtures/EURUSD_M15.csv` and `tests/fixtures/XAUUSD_M15.csv` (~3000 bar each, generated once by `tests/fixtures/make_fixtures.py` with fixed seed; columns `time,open,high,low,close,volume,spread`) plus tiny hand-made `tests/fixtures/gap_sl.csv` where a bar opens beyond SL
-- [ ] T018 [P] [US1] Write `tests/unit/test_paper_broker.py`: BUY fills at ask = open + spread×point + slippage; SELL fills at bid − slippage; SL hit via bar low (BUY) closes at SL − slippage; TP closes at TP exactly; **gap**: open beyond SL → fill at open; SL & TP in same bar → SL; commission charged `commission_per_lot × lots`; balance/equity/floating PnL/margin updated; `net_pnl` and `r_multiple` correct
+- [X] T018 [P] [US1] Write `tests/unit/test_paper_broker.py`: BUY fills at ask = open + spread×point + slippage; SELL fills at bid − slippage; SL hit via bar low (BUY) closes at SL − slippage; TP closes at TP exactly; **gap**: open beyond SL → fill at open; SL & TP in same bar → SL; commission charged `commission_per_lot × lots`; balance/equity/floating PnL/margin updated; `net_pnl` and `r_multiple` correct
 - [ ] T019 [P] [US1] Write `tests/unit/test_csv_feed.py`: rejects missing columns, non-increasing/duplicate time, price ≤ 0, high < low with message naming row number; merges two symbols in time order; missing `spread` → `default_spread_points`
 - [ ] T020 [P] [US1] Write `tests/unit/test_indicators.py`: `ema` matches `pandas.ewm(adjust=False)` reference values; `atr` Wilder on hand-computed 5-bar example
-- [ ] T021 [P] [US1] Write `tests/integration/test_backtest.py`: run engine on fixtures twice → identical trades & summary; no trade without SL; signal at bar t executed at open of bar t+1
+- [X] T021 [P] [US1] Write `tests/integration/test_backtest.py`: run engine on fixtures twice → identical trades & summary; no trade without SL; signal at bar t executed at open of bar t+1
 
 ### Implementation for User Story 1
 
-- [ ] T022 [P] [US1] Implement `src/data/csv_feed.py` `CsvFeed(data_dir, symbols, timeframe, start, end)`: load `{SYMBOL}_{TF}.csv` (time ISO-8601 UTC or epoch s), validate per FR-008, `history()`, `next_event()` yields `Bar` across symbols ordered by time — make T019 pass
+- [X] T022 [P] [US1] Implement `src/data/csv_feed.py` `CsvFeed(data_dir, symbols, timeframe, start, end)`: load `{SYMBOL}_{TF}.csv` (time ISO-8601 UTC or epoch s), validate per FR-008, `history()`, `next_event()` yields `Bar` across symbols ordered by time — make T019 pass
 - [ ] T023 [P] [US1] Implement `ema(series, n)` and `atr(df, n)` (Wilder, `ewm(alpha=1/n, adjust=False)`) in `src/strategy/indicators.py` — make T020 pass
-- [ ] T024 [US1] Implement `EmaAtrStrategy` in `src/strategy/ema_atr.py` (`warmup_bars = slow + atr_period`; BUY on fast crossing above slow, SELL on crossing below; SL = close ∓ ATR×atr_mult; TP = close ± rr×SL distance; `CLOSE` on opposite cross if position open; reason text e.g. `"EMA20>EMA50 cross, ATR=…"`) and register in `STRATEGIES` dict in `src/strategy/__init__.py`
-- [ ] T025 [US1] Implement `PaperBroker` in `src/broker/paper_broker.py` per contracts/interfaces.md and research R5: `open`, `close`, `modify`, `positions`, `account`, `on_price(bar)` (SL/TP/gap check, mark-to-market), uses `src/core/pricing.py`, persists every mutation through `Storage` — make T018 pass
-- [ ] T026 [US1] Implement minimal `RiskManager.evaluate` in `src/risk/risk_manager.py`: reject signal without valid SL (FR-016), compute lots via `pricing.lot_size`, reject when lots == 0 with reason `"lot below volume_min"`; return `OrderRequest | Rejection`
-- [ ] T027 [US1] Implement `Engine` in `src/engine.py` per plan.md "Engine loop" steps 2–5 (kill check stubbed until US3): pending-signal queue so execution happens on next bar open; on data end close all with `END_OF_DATA`; equity snapshot per bar; log rejections via `Storage.log_event(kind="reject")`
-- [ ] T028 [US1] Implement `src/report.py`: metrics from `trades`/`equity` (total trades, win rate, profit factor, max drawdown %, avg R, net PnL), `equity.png` via matplotlib `Agg`, `summary.json`; `main()` for `forexbot-report --db --run`
-- [ ] T029 [US1] Implement `src/main.py` CLI per contracts/cli.md for `--mode backtest` (`--config --data --from --to --log-level`), new DB `data/backtest_{run_id}.db`, print summary, exit codes 0/1 — make T021 pass
+- [X] T024 [US1] Implement `EmaAtrStrategy` in `src/strategy/ema_atr.py` (`warmup_bars = slow + atr_period`; BUY on fast crossing above slow, SELL on crossing below; SL = close ∓ ATR×atr_mult; TP = close ± rr×SL distance; `CLOSE` on opposite cross if position open; reason text e.g. `"EMA20>EMA50 cross, ATR=…"`) and register in `STRATEGIES` dict in `src/strategy/__init__.py`
+- [X] T025 [US1] Implement `PaperBroker` in `src/broker/paper_broker.py` per contracts/interfaces.md and research R5: `open`, `close`, `modify`, `positions`, `account`, `on_price(bar)` (SL/TP/gap check, mark-to-market), uses `src/core/pricing.py`, persists every mutation through `Storage` — make T018 pass
+- [X] T026 [US1] Implement minimal `RiskManager.evaluate` in `src/risk/risk_manager.py`: reject signal without valid SL (FR-016), compute lots via `pricing.lot_size`, reject when lots == 0 with reason `"lot below volume_min"`; return `OrderRequest | Rejection`
+- [X] T027 [US1] Implement `Engine` in `src/engine.py` per plan.md "Engine loop" steps 2–5 (kill check stubbed until US3): pending-signal queue so execution happens on next bar open; on data end close all with `END_OF_DATA`; equity snapshot per bar; log rejections via `Storage.log_event(kind="reject")`
+- [X] T028 [US1] Implement `src/report.py`: metrics from `trades`/`equity` (total trades, win rate, profit factor, max drawdown %, avg R, net PnL), `equity.png` via matplotlib `Agg`, `summary.json`; `main()` for `forexbot-report --db --run`
+- [X] T029 [US1] Implement `src/main.py` CLI per contracts/cli.md for `--mode backtest` (`--config --data --from --to --log-level`), new DB `data/backtest_{run_id}.db`, print summary, exit codes 0/1 — make T021 pass
 
 **Checkpoint**: quickstart V2 lulus. MVP selesai.
 
@@ -250,3 +250,13 @@ T048 fake_mt5 | T049 test_gateway | T050 test_live_guards | T052 gateway README 
 - Never commit `.env`, `data/*.db`, or `STOP`.
 - `src/engine.py` and `src/main.py` are touched by several stories — no [P] across stories there.
 - Commit after each task or logical group.
+
+## Implementation notes — Fase 1 & 2 (2026-11-08)
+
+Layout follows the operator's request, which differs from the paths above:
+`config/settings.py` (dataclasses + PyYAML, not pydantic) · `src/models.py` (not `src/core/`) · `src/engine/backtest.py` + `src/engine/report.py` (not `src/engine.py`/`src/report.py`) · flat `tests/test_risk.py`, `tests/test_paper_broker.py`, `tests/test_backtest.py`.
+
+- Pip value / PnL live on `SymbolSpec` (`pip_value_per_lot`, `pnl()`), lot sizing on `RiskManager.lot_size` — replaces `src/core/pricing.py` (T011) except swap.
+- Partially done: T001 (deps only PyYAML + pytest), T019 (merge order not unit-tested), T025 (no Storage persistence), T026 (also has daily lock + STOP/error kill switch from T040/T041), T028 (no equity.png; writes `summary.json` + `trades.csv`).
+- Daily loss day = UTC date (shortcut until `clock.py`, T012).
+- Not done yet: T002 (full skeleton), T008, T011 swap, T012, T013/T014 (SQLite), T016, T017 `gap_sl.csv` (gap covered by unit tests), T020/T023 (indicators live inline in `ema_atr.py`).
